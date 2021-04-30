@@ -34,7 +34,7 @@ app.get("/models", async (req, res) => {
 app.get("/modelscount", async (req, res) => {
     try {
         const con = await mysql.createConnection(mysqlConfig);
-        const [data] = await con.execute(`SELECT models.name, models.hour_price, COUNT(vehicles.model_id) FROM models INNER JOIN vehicles ON models.id = vehicles.model_id GROUP BY vehicles.model_id`);
+        const [data] = await con.execute(`SELECT models.name, models.hour_price, COUNT(vehicles.model_id) AS amount FROM models INNER JOIN vehicles ON models.id = vehicles.model_id GROUP BY vehicles.model_id`);
         con.end();
         return res.send(data);
     } catch(err) {
