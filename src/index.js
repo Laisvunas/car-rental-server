@@ -73,12 +73,24 @@ app.post("/models", async (req, res) => {
     }
     try {
         const con = await mysql.createConnection(mysqlConfig);
-        const [result] = await con.execute (`INSERT INTO models (name, hour_price) VALUES (${mysql.escape(req.body.name)}, ${mysql.escape(req.body.hour_price)})`);
-        con.end();
-        if(!result.insertId) {
-            return res.status(500).send({ error: "Execution failed. Please contact admin" });
+        let [result] = await con.execute(`SELECT models.id FROM models WHERE models.name = ${mysql.escape(req.body.name)}`);
+        if (result.length == 1) {
+            [result] = await con.execute (`UPDATE models SET hour_price = ${mysql.escape(req.body.hour_price)} WHERE id = ${result[0].id}`);
+            if(!result.affectedRows) {
+                return res.status(500).send({ error: "Execution failed. Please contact admin" });
+            }
+            return res.send({ affectedRows: result.affectedRows});
         }
-        return res.send({ id: result.insertId});
+        else {
+            [result] = await con.execute (`INSERT INTO models (name, hour_price) VALUES (${mysql.escape(req.body.name)}, ${mysql.escape(req.body.hour_price)})`);
+            if(!result.insertId) {
+                return res.status(500).send({ error: "Execution failed. Please contact admin" });
+            }
+            return res.send({ id: result.insertId});
+        }
+        con.end();
+        
+        
     } catch (err) {
         console.log(err);
         return res.status(500).send ({error: "Unexpected error has ocurred. Please try again later"});
